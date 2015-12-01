@@ -1,10 +1,7 @@
-import pybrain
 import cv2
-import numpy as np
 from scipy import misc
 import os
 import matplotlib.pyplot as plt
-import pylab
 
 
 def read_file(filename):
@@ -55,38 +52,6 @@ def build_dataset(t):
     return data
 
 
-# def calculate_feature_set(twin_set):
-#     labels = twin_set.keys()
-#     bf = cv2.BFMatcher()
-#     matches = bf.match(twin_set[labels[0]]['des'][0], twin_set[labels[1]]['des'][0])
-#
-#     twin_1_features = twin_set[labels[0]]['kp'][0]
-#     twin_2_features = twin_set[labels[1]]['kp'][0]
-#     features = {}
-#     for i in xrange(len(twin_1_features)):
-#         features[i] = twin_1_features[i].response
-#
-#     for j in xrange(NUM_FEATURES, NUM_FEATURES+len(twin_2_features)):
-#         #if there's a match, don't do anything
-#         #otherwise add the features in
-#
-#     ## for NUM_FEATURES in each image, possibly constrain the number of keypoints generated to NUM_FEATURES
-#     # make a feature for the keypoint
-#     # if it has a match, remove the matching keypoint from the other image's list.
-#
-#     ## for each keypoint in each image
-#     # mark the feature 1 if it is present
-#     # else mark it 0
-
-
-# def construct_twin_classifier(twin_set):
-#     ds = pybrain.ClassificationDataSet(NUM_FEATURES, nb_classes=2, class_labels=twin_set.keys())
-#     for key, val in twin_set:
-#         for item in val:
-#             ds.appendLinked(item, [key])
-#     print ds.calculateStatistics()
-
-
 def find_nearest_neighbor(in_image, twin_set):
     FLANN_INDEX_KDTREE =0
     index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
@@ -127,12 +92,31 @@ def load_input(path, type):
     return out
 
 
-def main():
+def run_experiment():
+    testdir = 'test/'
     t = 'combo'
     data = build_dataset(t)
-    input = load_input('test/10/90438d18.jpg', t)
-    classification = find_nearest_neighbor(input, data['10'])
-    print classification[0], classification[1]
+
+    error = 0
+    count = 0
+    for twinpair in os.listdir(testdir):
+        for pic in os.listdir(testdir+twinpair):
+            inp = load_input(testdir+twinpair+'/'+pic, t)
+            expected_class = pic[:5]
+            classification = find_nearest_neighbor(inp, data[twinpair])
+            print "Expected: ", expected_class
+            print "Received: ", classification[0]
+
+            if expected_class != classification[0]:
+                error += 1
+            count += 1
+
+    print "Error: ", float(error)/count
+    return error
+
+
+def main():
+    run_experiment()
 
 if __name__ == '__main__':
     main()
