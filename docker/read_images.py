@@ -90,7 +90,7 @@ def build_dataset(t):
 def find_nearest_neighbor(in_image, twin_set):
     FLANN_INDEX_KDTREE =0
     index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
-    search_params = dict(checks=50)  # or pass empty dictionary
+    search_params = dict(checks=100)  # or pass empty dictionary
 
     flann = cv2.FlannBasedMatcher(index_params, search_params)
 
@@ -103,10 +103,13 @@ def find_nearest_neighbor(in_image, twin_set):
             for i in xrange(len(example)):
                 # find matches between input data and twin data
                 matches = flann.match(in_image['des'][i], example[i])
+                if len(matches) < 100:
+                    dist += 1
+                    continue
                 distances = [m.distance for m in matches]
                 # normalize the distances to a value between 0 and 1 and sum them.
                 normalized_distances = [x/max(distances) for x in distances]
-                dist += sum(normalized_distances)
+                dist += sum(normalized_distances)/len(matches)
 
             total_distances.append((key, dist/len(example)))
 
