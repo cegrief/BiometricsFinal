@@ -9,6 +9,7 @@ def read_file(filename):
 
 
 def feature_extract(img, t='combo'):
+    # uses SIFT, SURF, ORB, or a combination of all three to extract features from the face
     img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     x, y, w, h = face_detect(img_gray)
     face_image = img[y:y+h, x:x+w]
@@ -38,12 +39,14 @@ def feature_extract(img, t='combo'):
 
 
 def face_detect(img_gray):
+    # uses Haar cascade to classify the face in our image
     face_cascade = cv2.CascadeClassifier('face-classifiers/haarcascade_frontalface_default.xml')
     face = face_cascade.detectMultiScale(img_gray, minSize=(600, 600), scaleFactor=1.1, flags=cv2.cv.CV_HAAR_SCALE_IMAGE)
     return face[0][0], face[0][1], face[0][2], face[0][3]
 
 
 def build_dataset(t):
+    # constructs the dataset that will be used for training
     DIR = 'tmp/'
     data = {}
     for x in os.listdir(DIR):
@@ -59,7 +62,9 @@ def build_dataset(t):
 
 
 def find_nearest_neighbor(in_image, twin_set):
-    FLANN_INDEX_KDTREE =0
+    # classifies an image as either one twin or the other by using FLANN or brute force classification techniques and
+    # calculates the distances for each image
+    FLANN_INDEX_KDTREE = 0
     index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
     search_params = dict(checks=100)  # or pass empty dictionary
     flann = cv2.FlannBasedMatcher(index_params, search_params)
@@ -97,9 +102,10 @@ def find_nearest_neighbor(in_image, twin_set):
     return sorted_distances
 
 
-def load_input(path, type):
+def load_input(path, t):
+    # reads in image so we can extract the features from it appropriately
     img = cv2.imread(path)
-    kp, des = feature_extract(img)
+    kp, des = feature_extract(img, t)
     out = {}
     out['kp'] = kp
     out['des'] = des
@@ -107,6 +113,7 @@ def load_input(path, type):
 
 
 def run_experiment(t):
+    # performs our experiment, attempting to classify images based on the twin pair it belongs to
     testdir = 'test/'
     data = build_dataset(t)
 
